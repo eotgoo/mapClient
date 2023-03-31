@@ -1,42 +1,68 @@
-import logo from "./logo.svg";
 import "./App.css";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import axios from "axios";
 import { useState } from "react";
 
 function App() {
-  const [branch, setBranch] = useState();
+  const [branches, setBranches] = useState([]);
+
   const getAllBranch = async () => {
     try {
       const result = await axios.get("http://localhost:8009/restaurant");
-      setBranch(result.data.restaurant);
+      setBranches(result.data.restaurant);
     } catch (err) {
-      console.log("err", err);
+      console.log("ERR", err);
     }
   };
+
+  const getNearBranch = async () => {
+    try {
+      const result = await axios.post(
+        "http://localhost:8009/restaurant/near?distance=200",
+        {
+          lat: 47.92394060040875,
+          lon: 106.93371541130081,
+        }
+      );
+      setBranches(result.data.branches);
+    } catch (err) {
+      console.log("ERR", err);
+    }
+  };
+
   return (
     <div className="App">
-      <h1>map</h1>
+      <h1>Газрын зураг</h1>
       <div>
-        <button onClick={getAllBranch}>bugdig haruul</button>
-        <button>oirin zaig harul</button>
+        <button onClick={getAllBranch}>buh slbar</button>
+        <button onClick={getNearBranch}>oirin zai</button>
       </div>
-      <div>
+      <div style={{ width: "100%", height: "90vh", background: "violet" }}>
         <MapContainer
-          center={[47.92386099022857, 106.93396174685603]}
+          style={{ width: "100%", height: "90vh" }}
+          center={[47.92394060040875, 106.93371541130081]}
           zoom={17}
           scrollWheelZoom={false}
-          style={{ width: "100%", height: "90vh" }}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <Marker position={[47.92386099022857, 106.93396174685603]}>
-            <Popup>
-              A pretty CSS3 popup. <br /> Easily customizable.
-            </Popup>
+          <Marker position={[47.92394060040875, 106.93371541130081]}>
+            <Popup>Seoul Business Center</Popup>
           </Marker>
+          {branches.length > 0 &&
+            branches.map((r, index) => (
+              <Marker
+                key={index}
+                position={[
+                  r.location.coordinates[1],
+                  r.location.coordinates[0],
+                ]}
+              >
+                <Popup>{r.name}</Popup>
+              </Marker>
+            ))}
         </MapContainer>
       </div>
     </div>
